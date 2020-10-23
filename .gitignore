@@ -1,0 +1,10 @@
+# We shall not leak our member information ;)
+*.csv
+process_experiences.py
+
+# No editor settings
+.vscode/
+
+# Misc
+.DS_Store
+__pycache__/
