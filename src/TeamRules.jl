@@ -12,7 +12,7 @@ function genericEvaluate(df::AbstractDataFrame, team::String)
         var(df.Experience)/4 * 0.3,
         mean(df.Commitment)^2 * 0.6,
         mean(meanStrengths .* strengthWeights)^2 * 1,
-        mean(preferences) * 1.8
+        mean(preferences) * 2
         # TODO cohort, availability, CAD, grade
     ]
     result = mean(factors)
@@ -37,12 +37,12 @@ function summary(df::AbstractDataFrame, team::String)
 end
 
 function summaryInR(df::AbstractDataFrame, team::String)
-    categoryLine(category) = "Strength.$category = c($(join(df[!, "Strength.$category"], ", ")))"
+    categoryLine(category) = "    Strength.$category = c($(join(df[!, "Strength.$category"], ", ")))"
 
     return "teamSummary <- data.frame(
-        Experience = c($(join(df.Experience ./ 4, ", "))),
-        Commitment = c($(join(df.Commitment, ", "))),
-        Preference = c($(join(df[!, "Preference.$team"], ", "))),\n" *
+    Experience = c($(join(df.Experience ./ 4, ", "))),
+    Commitment = c($(join(df.Commitment, ", "))),
+    Preference = c($(join(df[!, "Preference.$team"], ", "))),\n" *
         join(map(categoryLine, strengthCategories), ",\n") * ")"
 end
 
@@ -50,7 +50,7 @@ end
 function joinScores(scores::Array{Float64, 1}, frames::GroupedDataFrame)
     factors = [
         # No team can be bad
-        minimum(scores) * 2,
+        minimum(scores)^2,
         # Teams shall be good
         mean(scores) * 0.9,
         # Teams shall be balanced
@@ -66,7 +66,10 @@ function checkRequirements(frames::GroupedDataFrame)
     for key = keys(frames)
         if size(frames[key], 1) <= 1
             return false
-        elseif !TeamRequirements[String(key.Team)](frames[key])
+        # No member assigned to this team should hate this team
+        elseif minimum(frames[key][!, "Preference.$(string(key.Team))"]) < 0.2
+            return false
+        elseif !TeamRequirements[string(key.Team)](frames[key])
             return false
         end
     end

@@ -76,7 +76,7 @@ function wanderMaxima(df::AbstractDataFrame, iterations::Int64 = 100000)
                 # if newScore < best[1]
                     best[1] = newScore
                     best[2] = assignments(groups)
-                    best[3] = localdf
+                    best[3] = copy(localdf)
                 elseif newScore < best[1] - 0.3
                 # elseif newScore > best[1] + 0.3
                     revert!(Δ, df)
